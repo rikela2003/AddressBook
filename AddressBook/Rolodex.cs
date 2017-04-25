@@ -8,7 +8,12 @@ namespace AddressBook
         public Rolodex()
         {
             _contacts = new List<Contact>();
-            _recipes = new List<Recipe>();
+            _recipes = new Dictionary<RecipeType, List<Recipe>>();
+
+            _recipes.Add(RecipeType.Appetizers, new List<Recipe>());
+            _recipes[RecipeType.Entrees] = new List<Recipe>();
+            _recipes.Add(RecipeType.Desserts, new List<Recipe>());
+
         }
 
         public void DoStuff()
@@ -53,6 +58,25 @@ namespace AddressBook
             }
         }
 
+        private void DoListRecipes()
+        {
+            Console.Clear();
+            Console.WriteLine("RECIPES!");
+            foreach (RecipeType recipeType in _recipes.Keys)
+            {
+                Console.WriteLine(recipeType);
+
+                List<Recipe> specificRecipies = _recipes[recipeType];
+                foreach (Recipe recipe in specificRecipies)
+                {
+                    Console.WriteLine($"\t{recipe}");
+                }
+
+                Console.WriteLine();
+            }
+            Console.ReadLine();
+        }
+
         private void DoSearchEverything()
         {
             Console.Clear();
@@ -62,7 +86,10 @@ namespace AddressBook
 
             List<IMatchATerm> matchables = new List<IMatchATerm>();
             matchables.AddRange(_contacts);
-            matchables.AddRange(_recipes);
+            matchables.AddRange(_recipes[RecipeType.Appetizers]);
+            matchables.AddRange(_recipes[RecipeType.Entrees]);
+            matchables.AddRange(_recipes[RecipeType.Desserts]);
+
 
             foreach (IMatchATerm matcher in matchables)
             {
@@ -80,8 +107,15 @@ namespace AddressBook
             Console.WriteLine("Please enter your recipe title:");
             string title = GetNonEmptyStringFromUser();
             Recipe recipe = new Recipe(title);
-            _recipes.Add(recipe);
 
+            Console.WriteLine("What kind of recipe is this?");
+            for (int i = 0; i < (int)RecipeType.UPPER_LIMIT; i += 1)
+            {
+                Console.WriteLine($"{i}. {(RecipeType)i}");
+            }
+            RecipeType choice = (RecipeType) int.Parse(Console.ReadLine());
+            List<Recipe> specificRecipes = _recipes[choice];
+            specificRecipes.Add(recipe);
         }
 
         private void DoRemoveContact()
@@ -216,6 +250,6 @@ namespace AddressBook
         }
 
         private List<Contact> _contacts;
-        private List<Recipe> _recipes;
+        private Dictionary<RecipeType, List<Recipe>> _recipes;
     }
 }
