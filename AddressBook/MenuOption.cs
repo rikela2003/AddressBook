@@ -8,5 +8,9 @@
         ListContacts,
         SearchContacts,
         RemoveContacts,
+        AddRecipe,
+        SearchEverything,
+
+        UPPER_LIMIT
     }
 }

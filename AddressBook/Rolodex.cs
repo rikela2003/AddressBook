@@ -8,6 +8,7 @@ namespace AddressBook
         public Rolodex()
         {
             _contacts = new List<Contact>();
+            _recipes = new List<Recipe>();
         }
 
         public void DoStuff()
@@ -40,10 +41,47 @@ namespace AddressBook
                     case MenuOption.RemoveContacts:
                         DoRemoveContact();
                         break;
+                    case MenuOption.AddRecipe:
+                        DoAddRecipe();
+                        break;
+                    case MenuOption.SearchEverything:
+                        DoSearchEverything();
+                        break;
                 }
                 ShowMenu();
                 choice = GetMenuOption();
             }
+        }
+
+        private void DoSearchEverything()
+        {
+            Console.Clear();
+            Console.WriteLine("SEARCH EVERYTHING!");
+            Console.Write("Please enter a search term: ");
+            string term = GetNonEmptyStringFromUser();
+
+            List<IMatchATerm> matchables = new List<IMatchATerm>();
+            matchables.AddRange(_contacts);
+            matchables.AddRange(_recipes);
+
+            foreach (IMatchATerm matcher in matchables)
+            {
+                if (matcher.Matches(term))
+                {
+                    Console.WriteLine($"> {matcher}");
+                }
+            }
+            Console.ReadLine();
+        }
+
+        private void DoAddRecipe()
+        {
+            Console.Clear();
+            Console.WriteLine("Please enter your recipe title:");
+            string title = GetNonEmptyStringFromUser();
+            Recipe recipe = new Recipe(title);
+            _recipes.Add(recipe);
+
         }
 
         private void DoRemoveContact()
@@ -148,7 +186,7 @@ namespace AddressBook
             string input = Console.ReadLine();
             int choice = int.Parse(input);
 
-            while (choice < 0 || choice > 5)
+            while (choice < 0 || choice >= (int)MenuOption.UPPER_LIMIT)
             {
                 Console.WriteLine("That is not valid.");
                 input = Console.ReadLine();
@@ -161,12 +199,16 @@ namespace AddressBook
         private void ShowMenu()
         {
             Console.Clear();
-            Console.WriteLine($"ROLODEX! ({_contacts.Count})");
+            Console.WriteLine($"ROLODEX! ({_contacts.Count}) ({_recipes.Count})");
             Console.WriteLine("1. Add a person");
             Console.WriteLine("2. Add a company");
             Console.WriteLine("3. List all contacts");
             Console.WriteLine("4. Search contacts");
             Console.WriteLine("5. Remove a contact");
+            Console.WriteLine("------------------");
+            Console.WriteLine("6. Add a recipe");
+            Console.WriteLine("------------------");
+            Console.WriteLine("7. Search everything!");
             Console.WriteLine();
             Console.WriteLine("0. Exit");
             Console.WriteLine();
@@ -174,5 +216,6 @@ namespace AddressBook
         }
 
         private List<Contact> _contacts;
+        private List<Recipe> _recipes;
     }
 }
