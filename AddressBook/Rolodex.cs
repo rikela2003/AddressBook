@@ -215,18 +215,33 @@ namespace AddressBook
             return input;
         }
 
+
+        private int GetNumberFromUser()
+        {
+            while (true)
+            {
+                try
+                {
+                    string input = Console.ReadLine();
+                    return int.Parse(input);
+                }
+                catch (FormatException)
+                {
+                    Console.WriteLine("You should type a number.");
+                }
+            }
+        }
+
+
         private MenuOption GetMenuOption()
         {
-            string input = Console.ReadLine();
-            int choice = int.Parse(input);
-
+            int choice = GetNumberFromUser();
             while (choice < 0 || choice >= (int)MenuOption.UPPER_LIMIT)
             {
                 Console.WriteLine("That is not valid.");
-                input = Console.ReadLine();
-                choice = int.Parse(input);
+                choice = GetNumberFromUser();
             }
-
+          
             return (MenuOption)choice;
         }
 
