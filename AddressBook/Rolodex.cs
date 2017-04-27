@@ -1,12 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data.SqlClient;
+using System.IO;
+
 
 namespace AddressBook
 {
     public class Rolodex
     {
-        public Rolodex()
+        public Rolodex(string connectionString)
         {
+            _connectionString = connectionString;
             _contacts = new List<Contact>();
             _recipes = new Dictionary<RecipeType, List<Recipe>>();
 
@@ -62,18 +66,35 @@ namespace AddressBook
         {
             Console.Clear();
             Console.WriteLine("RECIPES!");
-            foreach (RecipeType recipeType in _recipes.Keys)
-            {
-                Console.WriteLine(recipeType);
 
-                List<Recipe> specificRecipies = _recipes[recipeType];
-                foreach (Recipe recipe in specificRecipies)
+            using (SqlConnection connection = new SqlConnection(_connectionString))
                 {
-                    Console.WriteLine($"\t{recipe}");
-                }
+                    connection.Open();
+                    SqlCommand command = connection.CreateCommand();
+                    command.CommandText = @"
+                    SELECT RecipeType
+                         , RecipeTitle
+                    FROM Recipes
+                    ORDERBY RecipeType
+                        , RecipeTitle
+                ";
 
-                Console.WriteLine();
-            }
+                    int currentrecipeType = -1;
+                    SqlDataReader reader = command.ExecuteReader();
+                    while (reader.Read())
+                    {
+                        int recipeType = reader.GetInt32(0);
+                        string title = reader.GetString(1);
+
+                        if (recipeType != currentrecipeType)
+                        {
+                            currentrecipeType = recipeType;
+                            RecipeType pretty = (RecipeType)currentrecipeType;
+                            Console.WriteLine(pretty.ToString().ToUpper());
+                        }
+                        Console.WriteLine($" {title}");
+                    }
+                }
             Console.ReadLine();
         }
 
@@ -86,12 +107,29 @@ namespace AddressBook
 
             List<IMatchATerm> matchables = new List<IMatchATerm>();
             matchables.AddRange(_contacts);
-            matchables.AddRange(_recipes[RecipeType.Appetizers]);
-            matchables.AddRange(_recipes[RecipeType.Entrees]);
-            matchables.AddRange(_recipes[RecipeType.Desserts]);
+            using (SqlConnection connection = new SqlConnection(_connectionString))
+            {
+                connection.Open();
+                SqlCommand command = connection.CreateCommand();
+                command.CommandText = @"
+                    SELECT RecipeType
+                         , RecipeTitle
+                    FROM Recipes
+                    ORDERBY RecipeType
+                        , RecipeTitle
+                ";
+
+                SqlDataReader reader = command.ExecuteReader();
+
+                while (reader.Read())
+                {
+                    string recipeTitle = reader.GetString(1);
+                    Recipe recipe = new Recipe(reader.GetString(1));
+                }
+            }
 
 
-            foreach (IMatchATerm matcher in matchables)
+                foreach (IMatchATerm matcher in matchables)
             {
                 if (matcher.Matches(term))
                 {
@@ -116,6 +154,21 @@ namespace AddressBook
             RecipeType choice = (RecipeType) int.Parse(Console.ReadLine());
             List<Recipe> specificRecipes = _recipes[choice];
             specificRecipes.Add(recipe);
+
+            using (SqlConnection connection = new SqlConnection(_connectionString))
+            {
+                connection.Open();
+
+                SqlCommand command = connection.CreateCommand();
+                command.CommandText = @"
+                    insert into recipes(recipeType, recipeTitle)
+                    values (@recipeType, @recipeTitle)
+            ";
+                command.Parameters.AddWithValue("recipeType", choice);
+                command.Parameters.AddWithValue("recipeTitle", title);
+                command.ExecuteNonQuery();
+            }
+            
         }
 
         private void DoRemoveContact()
@@ -202,7 +255,51 @@ namespace AddressBook
             string phoneNumber = GetNonEmptyStringFromUser();
 
             _contacts.Add(new Person(firstName, lastName, phoneNumber));
+
+
+            //Assignment
+            //string desktopPath = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
+            //string fileName = "Person.DAT";
+            //string fullPath = Path.Combine(desktopPath, fileName);
+            //using (StreamWriter writer = File.CreateText(fullPath))
+            //{
+                //writer.WriteLine("PhoneNumber|FirstName|LastName");
+            //}
+
+
+            //
+            //string[][] linesOfStrings = new string[][]
+            //{
+                //new string[] {phoneNumber, firstName, lastName},
+            //};
+
+            //
+            //using (StreamWriter writer = new StreamWriter(fullPath, true))
+            //{
+                //foreach (string[] data in linesOfStrings)
+                //{
+                    //writer.WriteLine(string.Join("|", data));
+                //}
+            //}
+
+
+            //
+            //using (StreamReader reader = File.OpenText(fullPath))
+            //{
+                //while (!reader.EndOfStream)
+                //{
+                    //string line = reader.ReadLine();
+                    //string[] parts = line.Split('|');
+                    //Console.WriteLine(string.Join("\t", parts));
+                //}
+            //}
+
         }
+
+        
+    
+    
+        
 
         private string GetNonEmptyStringFromUser()
         {
@@ -266,5 +363,6 @@ namespace AddressBook
 
         private List<Contact> _contacts;
         private Dictionary<RecipeType, List<Recipe>> _recipes;
+        private readonly string _connectionString;
     }
 }
