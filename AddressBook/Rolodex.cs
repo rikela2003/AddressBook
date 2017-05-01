@@ -11,12 +11,6 @@ namespace AddressBook
             _contactsRepository = contactsRepo;
             _recipesRepository = recipesRepo;
 
-            _contacts = new List<Contact>();
-            _recipes = new Dictionary<RecipeType, List<Recipe>>();
-
-            _recipes.Add(RecipeType.Appetizers, new List<Recipe>());
-            _recipes[RecipeType.Entreés] = new List<Recipe>();
-            _recipes.Add(RecipeType.Desserts, new List<Recipe>());
         }
 
         public void DoStuff()
@@ -231,26 +225,14 @@ namespace AddressBook
 
         private int GetNumberFromUser()
         {
-            while (true)
+            int value;
+            string input = Console.ReadLine();
+            while (!int.TryParse(input, out value))
             {
-                try
-                {
-                    string input = Console.ReadLine();
-                    return int.Parse(input);
-                }
-                catch (FormatException)
-                {
-                    Console.WriteLine("You should type a number.");
-                }
-                catch (InvalidOperationException)
-                {
-                    Console.WriteLine("THAT WAS BAD! DO AGAIN!");
-                }
-                finally
-                {
-                    Console.WriteLine("THIS will ALWAYS be PRINTED.");
-                }
+                Console.WriteLine("You should type a number.");
+                input = Console.ReadLine();
             }
+            return value;
         }
 
         private MenuOption GetMenuOption()
@@ -269,7 +251,7 @@ namespace AddressBook
         private void ShowMenu()
         {
             Console.Clear();
-            Console.WriteLine($"ROLODEX! ({_contacts.Count}) ({_recipes.Count})");
+            Console.WriteLine($"ROLODEX! ({_contactsRepository.Count}) ({_recipesRepository.Count})");
             Console.WriteLine("1. Add a person");
             Console.WriteLine("2. Add a company");
             Console.WriteLine("3. List all contacts");
@@ -286,8 +268,6 @@ namespace AddressBook
             Console.Write("What would you like to do? ");
         }
 
-        private readonly List<Contact> _contacts;
-        private Dictionary<RecipeType, List<Recipe>> _recipes;
         private readonly IHandleContacts _contactsRepository;
         private readonly IHandleRecipes _recipesRepository;
     }
