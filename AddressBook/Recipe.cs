@@ -1,6 +1,6 @@
 ﻿namespace AddressBook
 {
-    public class Recipe : IMatchATerm
+    public class Recipe : IMatchable
     {
         public Recipe(string title)
         {
@@ -14,7 +14,7 @@
 
         public override string ToString()
         {
-            return _title;
+            return $"RECIPE: {_title}";
         }
 
         private string _title;

@@ -7,8 +7,9 @@
         AddCompany,
         ListContacts,
         SearchContacts,
-        RemoveContacts,
+        RemoveContact,
         AddRecipe,
+        ListReceipes,
         SearchEverything,
 
         UPPER_LIMIT
