@@ -5,11 +5,12 @@ namespace AddressBook
 {
     public class Rolodex
     {
-        public Rolodex(IHandleContacts contactsRepo, IHandleRecipes recipesRepo)
+        public Rolodex(IHandleContacts contactsRepo, IHandleRecipes recipesRepo, IGetInputFromUsers input)
         {
 
             _contactsRepository = contactsRepo;
             _recipesRepository = recipesRepo;
+            _input = input;
 
         }
 
@@ -69,7 +70,7 @@ namespace AddressBook
                 Console.WriteLine(recipe);
             }
 
-            Console.ReadLine();
+            _input.WaitForEnterKey();
         }
 
         private void DoSearchEverything()
@@ -77,7 +78,7 @@ namespace AddressBook
             Console.Clear();
             Console.WriteLine("SEARCH EVERYTHING!");
             Console.Write("Please enter a search term: ");
-            string term = GetNonEmptyStringFromUser();
+            string term = _input.GetNonEmptyString();
 
             List<Contact> contacts = _contactsRepository.GetAllContacts();
             List<IMatchable> matchables = new List<IMatchable>();
@@ -93,21 +94,21 @@ namespace AddressBook
                     Console.WriteLine($"> {matcher}");
                 }
             }
-            Console.ReadLine();
+            _input.WaitForEnterKey();
         }
 
         private void DoAddRecipe()
         {
             Console.Clear();
             Console.WriteLine("Please enter your recipe title:");
-            string title = GetNonEmptyStringFromUser();
+            string title = _input.GetNonEmptyString();
 
             Console.WriteLine("What kind of recipe is this?");
             for (int i = 0; i < (int)RecipeType.UPPER_LIMIT; i += 1)
             {
                 Console.WriteLine($"{i}. {(RecipeType)i}");
             }
-            RecipeType choice = (RecipeType)int.Parse(Console.ReadLine());
+            RecipeType choice = (RecipeType)_input.GetNumber();
             _recipesRepository.Create(title, choice);
         }
 
@@ -116,7 +117,7 @@ namespace AddressBook
             Console.Clear();
             Console.WriteLine("REMOVE A CONTACT!");
             Console.Write("Search for a contact: ");
-            string term = GetNonEmptyStringFromUser();
+            string term = _input.GetNonEmptyString();
 
             List<Contact> contacts = _contactsRepository.GetAllContacts();
             List<Contact> listToSave = new List<Contact>();
@@ -125,7 +126,7 @@ namespace AddressBook
                 if (contact.Matches(term))
                 {
                     Console.Write($"Remove {contact}? (y/N)");
-                    if (Console.ReadLine().ToLower() == "y")
+                    if (_input.GetNonEmptyString().ToLower() == "y")
                     {
                         continue;
                     }
@@ -142,8 +143,7 @@ namespace AddressBook
             _contactsRepository.ReplaceAllContacts(listToSave);
 
             Console.WriteLine("No more contacts found.");
-            Console.WriteLine("Press Enter to return to the menu...");
-            Console.ReadLine();
+            _input.WaitForEnterKey();
         }
 
         private void DoSearchContacts()
@@ -151,7 +151,7 @@ namespace AddressBook
             Console.Clear();
             Console.WriteLine("SEARCH!");
             Console.Write("Please enter a search term: ");
-            string term = GetNonEmptyStringFromUser();
+            string term = _input.GetNonEmptyString();
 
             List<Contact> contacts = _contactsRepository.GetAllContacts();
             foreach (Contact contact in contacts)
@@ -161,9 +161,7 @@ namespace AddressBook
                     Console.WriteLine($"> {contact}");
                 }
             }
-
-            Console.WriteLine("Press Enter to continue...");
-            Console.ReadLine();
+            _input.WaitForEnterKey();
         }
 
         private void DoListContacts()
@@ -178,7 +176,7 @@ namespace AddressBook
                 Console.WriteLine(contact);
             }
 
-            Console.ReadLine();
+            _input.WaitForEnterKey();
         }
 
         private void DoAddCompany()
@@ -186,10 +184,10 @@ namespace AddressBook
             Console.Clear();
             Console.WriteLine("Please enter information about the company.");
             Console.Write("Company name: ");
-            string name = Console.ReadLine();
+            string name = _input.GetNonEmptyString();
 
             Console.Write("Phone number: ");
-            string phoneNumber = GetNonEmptyStringFromUser();
+            string phoneNumber = _input.GetNonEmptyString();
 
             _contactsRepository.CreateCompany(name, phoneNumber);
  
@@ -200,49 +198,26 @@ namespace AddressBook
             Console.Clear();
             Console.WriteLine("Please enter information about the person.");
             Console.Write("First name: ");
-            string firstName = Console.ReadLine();
+            string firstName = _input.GetNonEmptyString();
 
             Console.Write("Last name: ");
-            string lastName = GetNonEmptyStringFromUser();
+            string lastName = _input.GetNonEmptyString();
 
             Console.Write("Phone number: ");
-            string phoneNumber = GetNonEmptyStringFromUser();
+            string phoneNumber = _input.GetNonEmptyString();
 
             _contactsRepository.CreatePerson(firstName, lastName, phoneNumber);
         
         }
 
-         private string GetNonEmptyStringFromUser()
-        {
-            string input = Console.ReadLine();
-            while (input.Length == 0)
-            {
-                Console.WriteLine("That is not valid.");
-                input = Console.ReadLine();
-            }
-            return input;
-        }
-
-        private int GetNumberFromUser()
-        {
-            int value;
-            string input = Console.ReadLine();
-            while (!int.TryParse(input, out value))
-            {
-                Console.WriteLine("You should type a number.");
-                input = Console.ReadLine();
-            }
-            return value;
-        }
-
         private MenuOption GetMenuOption()
         {
-            int choice = GetNumberFromUser();
+            int choice = _input.GetNumber();
 
             while (choice < 0 || choice >= (int)MenuOption.UPPER_LIMIT)
             {
                 Console.WriteLine("That is not valid.");
-                choice = GetNumberFromUser();
+                choice = _input.GetNumber();
             }
 
             return (MenuOption)choice;
@@ -270,5 +245,6 @@ namespace AddressBook
 
         private readonly IHandleContacts _contactsRepository;
         private readonly IHandleRecipes _recipesRepository;
+        private readonly IGetInputFromUsers _input;
     }
 }
